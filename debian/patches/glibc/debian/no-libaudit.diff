@@ -1,0 +1,10 @@
+--- a/debian/debhelper.in/libc-dev.install
++++ b/debian/debhelper.in/libc-dev.install
+@@ -1,7 +1,6 @@
+ usr/include
+ usr/lib/*/*.o
+ usr/lib/*/*.so
+-usr/lib/*/audit
+ usr/lib/*/libBrokenLocale.a
+ usr/lib/*/libanl.a
+ usr/lib/*/libc.a
