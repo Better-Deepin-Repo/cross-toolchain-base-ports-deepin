@@ -64,13 +64,12 @@ CROSS_GNU_TYPE   = $(call _gnu_type,${CROSS_ARCH})
 CROSS_PKG_GNU_TYPE = $(subst _,-,$(call _gnu_type,${CROSS_ARCH}))
 
 MIN_VER_GLIBC		:= 2.38-11~
-MIN_VER_LINUX		:= 6.7.12
+MIN_VER_LINUX		:= 6.6.9
 MIN_VER_GCC		:= 12.3.0-25~
 MIN_VER_BINUTILS	:= 2.42-4~
 VER_GCC_BASE		:= 13
 libgcc_base		:= gcc-s
 
-DEB_VER_LINUX  := $(shell apt-cache policy linux-libc-dev | awk '/^ \*\*\*/ {print $$2}')
 ifeq ($(vendor),Ubuntu)
   MIN_VER_GLIBC	:= 2.39-0~
   MIN_VER_LINUX	:= 6.8.0
@@ -84,6 +83,7 @@ ifeq ($(vendor),Ubuntu)
 else
   VER_LINUX      := $(shell echo $(MIN_VER_LINUX) | sed 's/^\([0-9]*\.[0-9]*\).*/\1/')
 endif
+DEB_VER_LINUX  := $(shell dpkg-query -W -f='$${Version}' linux-source-$(VER_LINUX) 2>/dev/null || apt-cache policy linux-source-$(VER_LINUX) | awk '/Candidate:/ {print $$2}')
 
 VER_GCC          := $(shell dpkg-parsechangelog -SVersion -l/usr/src/gcc-${VER_GCC_BASE}/debian/changelog | cut -f 1 -d '-')
 DEB_VER_GCC      := $(shell dpkg-parsechangelog -SVersion -l/usr/src/gcc-${VER_GCC_BASE}/debian/changelog)
@@ -103,6 +103,7 @@ CTB_LIBC_DEV_DEPENDS = linux-libc-dev (>= $(DEB_VER_LINUX))
 BINUTILS_DIR  := /usr/src/binutils
 GLIBC_DIR     := /usr/src/glibc
 GCC_DIR       := /usr/src/gcc-${VER_GCC_BASE}
+LINUX_SOURCE_TARBALL := $(firstword $(wildcard /usr/src/linux-source-$(VER_LINUX).tar.* /usr/src/linux-source-$(VER_LINUX)/linux-source-$(VER_LINUX).tar.*))
 
 GLIBC_PATCHES  := $(CURDIR)/debian/patches/glibc/$(shell echo $(vendor) | tr A-Z a-z)
 
@@ -146,8 +147,8 @@ init: $(stamp)init-linux
 
 $(stamp)init-linux:
 	@echo START $@
-	rm -rf linux-source-[45].*
-	$(call unpack_tarball, $(firstword $(wildcard /usr/src/linux-source-$(VER_LINUX).tar.* /usr/src/linux-source-$(VER_LINUX)/linux-source-$(VER_LINUX).tar.*)))
+	rm -rf linux-source-$(VER_LINUX)
+	$(if $(LINUX_SOURCE_TARBALL),$(call unpack_tarball,$(LINUX_SOURCE_TARBALL)),$(error missing linux-source-$(VER_LINUX) tarball; install linux-source-$(VER_LINUX) or adjust MIN_VER_LINUX))
 	touch $@
 
 $(stamp)build-linux.%: $(stamp)init-linux

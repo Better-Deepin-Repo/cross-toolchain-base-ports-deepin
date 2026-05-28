@@ -11,7 +11,7 @@ fi
 cross=c
 cross=cross
 
-v_deb_linux=$(apt-cache policy linux-libc-dev | awk '/^ \*\*\*/ {print $2}')
+v_deb_linux=$(dpkg-query -W -f='${Version}' linux-source-6.6 2>/dev/null || apt-cache policy linux-source-6.6 | awk '/Candidate:/ {print $2}')
 v_deb_glibc=$(dpkg-parsechangelog -l/usr/src/glibc/debian/changelog | egrep '^Version:' | cut -f 2 -d ' ')
 
 v_deb_linux_cross=$(apt-cache show --no-all-versions linux-libc-dev-$arch-cross 2>/dev/null | awk '/^Version:/ {print $2}')
